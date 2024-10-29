@@ -53,17 +53,14 @@ def perspective_tx_cv(pts, h):
 
 def warp_whole_image(image, H):
     height, width = image.shape[:2]
-    # Define source points (corners of the original image)
     src_points = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
 
     transformed_corners = cv2.perspectiveTransform(np.array([src_points]), H)[0]
 
-    # Calculate the bounding box of the transformed corners
     x_coords, y_coords = zip(*transformed_corners)
     min_x, max_x = int(min(x_coords)), int(max(x_coords))
     min_y, max_y = int(min(y_coords)), int(max(y_coords))
 
-    # Calculate the new width and height based on the bounding box
     new_width = max_x - min_x
     new_height = max_y - min_y
     translation_matrix = np.array([[1, 0, -min_x],
@@ -71,7 +68,6 @@ def warp_whole_image(image, H):
                                 [0, 0, 1]])
     adjusted_homography = translation_matrix @ H
 
-    # Apply the adjusted homography matrix with warpPerspective
     warped_image = cv2.warpPerspective(image, adjusted_homography, (new_width, new_height))
     return warped_image
 
@@ -93,28 +89,16 @@ def add_perspective(source_image, destination_image, dst_pts):
     return result
 
 def add_slant(image, radians = 60):
-
     height, width = image.shape[:2]
-
-    # Original points (corners of the image)
     original_points = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
-
-    # Adjusted points to simulate a tilt
-    # This set of points should make the image look like it’s tilting away from the viewer along the lower edge
-    tilt_amount = -0.3  # Adjust tilt level between 0 and 1 for more or less tilt
-
-    # Define the new corners with tilt effect
+    tilt_amount = -0.3  
     new_points = np.float32([
-        [width * tilt_amount, 0],                # Top-left moves to the right
-        [width * (1 - tilt_amount), 0],          # Top-right moves to the left
-        [0, height],                             # Bottom-left remains the same
-        [width, height]                          # Bottom-right remains the same
+        [width * tilt_amount, 0],               
+        [width * (1 - tilt_amount), 0],          
+        [0, height],                             
+        [width, height]                         
     ])
-
-    # Calculate the perspective transformation matrix
     matrix = cv2.getPerspectiveTransform(original_points, new_points)
-
-    # Apply the warp perspective with the transformation matrix
     transformed_image = cv2.warpPerspective(image, matrix, (width, height))
     return transformed_image
 
